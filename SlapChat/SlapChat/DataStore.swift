@@ -12,6 +12,7 @@ import CoreData
 class DataStore {
     
     var messages:[Message] = []
+    var recipients:[Recipient] = []
     
     static let sharedDataStore = DataStore()
     
@@ -32,30 +33,63 @@ class DataStore {
         }
     }
     
-    func fetchData ()
-    {
+//    func fetchDataByEntity(entityName: String, key: String?) -> [AnyObject] {
+//        var fetchArray = [AnyObject]()
+//        let fetchRequest = NSFetchRequest(entityName: entityName)
+//        
+//        if let sortKey = key {
+//            let createSort = NSSortDescriptor(key: sortKey, ascending: true)
+//            fetchRequest.sortDescriptors = [createSort]
+//        }
+//        
+//        do {
+//            fetchArray = try self.managedObjectContext.executeFetchRequest(fetchRequest)
+//        } catch {
+//            let fetchError = error as NSError
+//            print(fetchError)
+//        }
+//        
+//        if recipients.count == 0{
+//            generateTestData()
+//        }
+//        
+//        return fetchArray
+//    }
+    
+    func fetchMessages () {
+        let fetch = NSFetchRequest(entityName: "Message")
         
-        var error:NSError? = nil
+        let createdAtSort = NSSortDescriptor(key: "createdAt", ascending: true)
+        fetch.sortDescriptors = [createdAtSort]
         
-        let messagesRequest = NSFetchRequest(entityName: "Message")
-        
-        let createdAtSorter = NSSortDescriptor(key: "createdAt", ascending:true)
-        
-        messagesRequest.sortDescriptors = [createdAtSorter]
-        
-        do{
-            messages = try managedObjectContext.executeFetchRequest(messagesRequest) as! [Message]
-        }catch let nserror1 as NSError{
-            error = nserror1
-            messages = []
+        do {
+            self.messages = try self.managedObjectContext.executeFetchRequest(fetch) as! [Message]
+        } catch let nserror as NSError {
+            print (nserror)
         }
         
-        if messages.count == 0 {
+        if messages.count == 0{
             generateTestData()
         }
-        
-        ////         perform a fetch request to fill an array property on your datastore
     }
+    
+    func fetchRecipients () {
+        let fetch = NSFetchRequest(entityName: "Recipient")
+        
+        let createdAtSort = NSSortDescriptor(key: "name", ascending: true)
+        fetch.sortDescriptors = [createdAtSort]
+        
+        do {
+            self.recipients = try self.managedObjectContext.executeFetchRequest(fetch) as! [Recipient]
+        } catch let nserror as NSError {
+            print (nserror)
+        }
+        
+        if recipients.count == 0{
+            generateTestData()
+        }
+    }
+    
     
     func generateTestData() {
         
@@ -64,18 +98,49 @@ class DataStore {
         messageOne.content = "Message 1"
         messageOne.createdAt = NSDate()
         
+        let recipientOne = NSEntityDescription.insertNewObjectForEntityForName("Recipient", inManagedObjectContext: managedObjectContext) as! Recipient
+        
+        recipientOne.name = "Eldon"
+        messageOne.recipient = recipientOne
+        
+        recipientOne.messages = [messageOne]
+        
         let messageTwo: Message = NSEntityDescription.insertNewObjectForEntityForName("Message", inManagedObjectContext: managedObjectContext) as! Message
         
         messageTwo.content = "Message 2"
         messageTwo.createdAt = NSDate()
+        
+        let recipientTwo = NSEntityDescription.insertNewObjectForEntityForName("Recipient", inManagedObjectContext: managedObjectContext) as! Recipient
+        
+        recipientTwo.name = "Henry"
+        messageTwo.recipient = recipientTwo
+        
+        recipientTwo.messages = [messageTwo]
         
         let messageThree: Message = NSEntityDescription.insertNewObjectForEntityForName("Message", inManagedObjectContext: managedObjectContext) as! Message
         
         messageThree.content = "Message 3"
         messageThree.createdAt = NSDate()
         
+        let recipientThree = NSEntityDescription.insertNewObjectForEntityForName("Recipient", inManagedObjectContext: managedObjectContext) as! Recipient
+        
+        recipientThree.name = "Ricky"
+        recipientThree.messages = [messageTwo, messageThree]
+        
+//This was just for testing
+//        let messageFour: Message = NSEntityDescription.insertNewObjectForEntityForName("Message", inManagedObjectContext: managedObjectContext) as! Message
+//        
+//        messageFour.content = "Message blah blah"
+//        messageFour.createdAt = NSDate()
+//        
+//        recipientThree.messages = [messageFour, messageThree]
+
+
+        
+        
+        
         saveContext()
-        fetchData()
+        fetchRecipients()
     }
     
     // MARK: - Core Data stack
